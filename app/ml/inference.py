@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import numpy as np
+import os
 from app.core.config import settings
 
 class Tensor:
@@ -32,22 +34,40 @@ class InferenceEngine:
         self.model_version = settings.MODEL_VERSION
         
         if weights_path is None:
-            np.random.seed(42)
-            w1 = np.random.randn(7, 32) * np.sqrt(2.0 / 7)
-            b1 = np.zeros(32)
-            w2 = np.random.randn(32, 1) * np.sqrt(2.0 / 32)
-            b2 = np.zeros(1)
+            default_path = os.path.join(os.path.dirname(__file__), "weights.npz")
+            if os.path.exists(default_path):
+                weights_path = default_path
+
+        if weights_path is not None:
+            if not os.path.exists(weights_path):
+                raise FileNotFoundError(f"Model weight file not found at: {weights_path}")
+            try:
+                arrays = np.load(weights_path)
+                w1 = arrays["w1"]
+                b1 = arrays["b1"]
+                w2 = arrays["w2"]  
+                b2 = arrays["b2"]  
+            except Exception as e:
+                raise FileNotFoundError(f"Model weight file corrupted: {str(e)}")
         else:
-            raise FileNotFoundError("Model weight file corrupted or missing")
+            np.random.seed(42)
+            w1 = np.random.randn(4, 32) * np.sqrt(2.0 / 4)
+            b1 = np.zeros(32)
+            w2 = np.random.randn(32, 3) * np.sqrt(2.0 / 32)  
+            b2 = np.zeros(3)                                 
 
-        self.layer1 = Linear(7, 32, w1, b1)
-        self.layer2 = Linear(32, 1, w2, b2)
+        self.layer1 = Linear(4, 32, w1, b1)
+        self.layer2 = Linear(32, 3, w2, b2)
 
-    def predict_probabilities(self, x_input: np.ndarray) -> float:
+    def predict_probabilities(self, x_input: np.ndarray) -> np.ndarray:
         t_in = Tensor(x_input)
         x = self.layer1.forward(t_in)
         x = x.relu()
         logits = self.layer2.forward(x)
-        prob = 1.0 / (1.0 + np.exp(-logits.data))
-        return float(prob.item())
+        
+        logits_data = logits.data.reshape(-1)
+        exp_logits = np.exp(logits_data - np.max(logits_data))
+        softmax_probs = exp_logits / np.sum(exp_logits)
+        
+        return softmax_probs
 

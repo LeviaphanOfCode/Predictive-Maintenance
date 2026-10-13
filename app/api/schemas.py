@@ -28,8 +28,8 @@ class TopKItem(BaseModel):
 class PredictResponse(BaseModel):
     request_id: UUID
     equipment_id: str
-    predicted_class: str
-    confidence: float
+    predicted_class: str = Field(..., description = "safe | warning | critical")
+    confidence: float = Field(..., description = "max(softmax)")
     top_k: List[TopKItem]
     fallback_triggered: bool
     model_version: str

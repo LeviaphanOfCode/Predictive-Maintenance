@@ -46,7 +46,7 @@ def test_anomaly_input_changes_behavior(service):
         telemetry=bad_telemetry
     )
     res = service.run_prediction(req)
-    assert res.predicted_class == "failure"
+    assert res.predicted_class == "critical"
 
 def test_invalid_telemetry_length_raises_error(mock_telemetry):
     mock_telemetry["temperature"] = [65.0] * 10

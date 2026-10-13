@@ -6,4 +6,6 @@ class Settings:
     SCALER_MINS = [0.0, 0.0, 0.0, 0.0]       # temp, press, vib, hum
     SCALER_MAXS = [200.0, 100.0, 50.0, 100.0] # диапазоны датчиков
 
+    CLASSES = ["safe", "warning", "critical"]
+
 settings = Settings()

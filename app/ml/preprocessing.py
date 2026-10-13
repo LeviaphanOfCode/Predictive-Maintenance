@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from app.api.schemas import PredictRequest
 from app.core.config import settings
@@ -21,16 +22,6 @@ class Preprocessor:
             np.mean(request.telemetry["vibration"]),
             np.mean(request.telemetry["humidity"])
         ]
-        
-        equipment_type = request.equipment_id.split("_")[0]
-        if equipment_type == "TURBINE":
-            eq_features = [1.0, 0.0, 0.0]
-        elif equipment_type == "PUMP":
-            eq_features = [0.0, 1.0, 0.0]
-        else:
-            eq_features = [0.0, 0.0, 1.0]
-            
-        full_features = np.array(features + eq_features, dtype=np.float32)
-        full_features[:4] = self.scaler.transform(full_features[:4])
+        full_features = np.array(features, dtype=np.float32)
+        full_features = self.scaler.transform(full_features)
         return full_features.reshape(1, -1)
-

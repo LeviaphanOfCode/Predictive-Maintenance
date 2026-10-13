@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import numpy as np
 from app.api.schemas import PredictRequest, PredictResponse, TopKItem
 from app.ml.preprocessing import Preprocessor
 from app.ml.inference import InferenceEngine
@@ -13,33 +15,25 @@ class PredictiveMaintenanceService:
         prepared_data = self.preprocessor.process(request)
         
         try:
-            failure_prob = self.engine.predict_probabilities(prepared_data)
+            probs = self.engine.predict_probabilities(prepared_data)
+        except FileNotFoundError as e:
+            raise e
         except Exception as e:
             raise RuntimeError(f"Inference Engine crashed: {str(e)}")
 
-        normal_prob = 1.0 - failure_prob
-        warning_prob = failure_prob * 0.3
-        
-        if failure_prob > 0.5:
-            predicted_class = "failure"
-            confidence = failure_prob
-        elif failure_prob > 0.2:
-            predicted_class = "warning"
-            confidence = 1.0 - failure_prob
-        else:
-            predicted_class = "normal"
-            confidence = normal_prob
+        max_idx = int(np.argmax(probs))
+        predicted_class = settings.CLASSES[max_idx]
+        confidence = float(probs[max_idx])
 
         fallback_triggered = False
         if confidence < self.threshold:
             fallback_triggered = True
-            predicted_class = "failure" 
-            confidence = failure_prob
+            predicted_class = "critical"
+            confidence = float(probs[settings.CLASSES.index("critical")])
 
         top_k = [
-            TopKItem(cls="failure", prob=round(failure_prob, 3)),
-            TopKItem(cls="warning", prob=round(warning_prob, 3)),
-            TopKItem(cls="normal", prob=round(max(0.0, normal_prob - warning_prob), 3))
+            TopKItem(cls=settings.CLASSES[i], prob=round(float(probs[i]), 3))
+            for i in range(len(settings.CLASSES))
         ]
         top_k.sort(key=lambda item: item.prob, reverse=True)
 
@@ -52,4 +46,3 @@ class PredictiveMaintenanceService:
             fallback_triggered=fallback_triggered,
             model_version=self.engine.model_version
         )
-
