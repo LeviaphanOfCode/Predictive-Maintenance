@@ -1,0 +1,5 @@
+outs:
+- md5: 521d565a00c552dbff7c9ca86399e42a
+  size: 3038
+  hash: md5
+  path: weights.npz

@@ -221,3 +221,11 @@ __marimo__/
 .pkl
 .onnx
 .pt
+
+# Data and artefacts
+/data/processed/
+/artifacts/
+miruns/
+
+# Weights
+*.npz
