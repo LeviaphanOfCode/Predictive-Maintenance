@@ -425,28 +425,3 @@ ai-system-predictive-maintenance/
 ├── models/                 # Артефакты модели (в .gitignore)
 └── tests/
 ```
-
-## Лабораторная работа №4: пайплайн, DataOps
-
-### Назначение конвейера
-Реализован воспроизводимый конвейер подготовки данных для многоклассовой классификации. Пайплайн включает валидацию контракта (Pandera), очистку, оконную агрегацию, препроцессинг (sklearn) и логирование экспериментов (MLflow).
-
-### Структура артефактов
-- 'data/raw/telemetry.csv' - исходные сырые данные (отслеживается через DVC);
-- 'data/processed/train.parquet' / 'test.parquet' - подготовленные датасеты;
-- 'artifacts/preprocessor.joblib' - обученный объект 'ColumnTransformer' (StandartScaler + OneHotEncoder);
-- 'models/weights.npz' - веса модели (отслеживаются через DVC).
-
-### Инструкция по запуску
-Для запуска необходим Python 3.10+ и активированное виртуальное окружение (venv).
-
-```bash
-# Установка зависимостей
-pip install -r requirements.txt
-
-# Запуск пайплайна (сборка данных и препроцессора)
-python -m dvc repro
-
-# Просмотр логов MLflow
-mlflow ui
-```
