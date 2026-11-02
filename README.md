@@ -440,7 +440,7 @@ ai-system-predictive-maintenance/
 ### Инструкция по запуску
 Для запуска необходим Python 3.10+ и активированное виртуальное окружение (venv).
 
-'''bash
+```bash
 # Установка зависимостей
 pip install -r requirements.txt
 
@@ -448,4 +448,5 @@ pip install -r requirements.txt
 python -m dvc repro
 
 # Просмотр логов MLflow
-mlflow ui'''
+mlflow ui
+```
