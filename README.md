@@ -425,6 +425,8 @@ ai-system-predictive-maintenance/
 ├── models/                 # Артефакты модели (в .gitignore)
 └── tests/
 
+'''
+
 ## Лабораторная работа №4: пайплайн, DataOps
 
 ### Назначение конвейера
@@ -447,4 +449,4 @@ pip install -r requirements.txt
 python -m dvc repro
 
 # Просмотр логов MLflow
-mlflow ui
+mlflow ui'''
