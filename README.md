@@ -424,8 +424,7 @@ ai-system-predictive-maintenance/
 │       └── ADR-03-monolith-vs-microservices.md
 ├── models/                 # Артефакты модели (в .gitignore)
 └── tests/
-
-'''
+```
 
 ## Лабораторная работа №4: пайплайн, DataOps
 
