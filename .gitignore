@@ -230,3 +230,6 @@ miruns/
 # Weights
 *.npz
 models/*.npz
+
+mlruns/
+mlflow.db
