@@ -1,0 +1,14 @@
+stages:
+  prepare_data:
+    cmd: PYTHONPATH=. python app/ml/pipeline.py
+    deps:
+      - app/ml/pipeline.py
+      - app/core/contracts.py
+      - data/raw/telemetry.csv
+    outs:
+      - data/processed/train.parquet
+      - data/processed/test.parquet
+      - artifacts/preprocessor.joblib
+    metrics:
+      - data/processed/validation_report.json:
+          cache: false

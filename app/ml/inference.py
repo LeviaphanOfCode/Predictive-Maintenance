@@ -34,7 +34,7 @@ class InferenceEngine:
         self.model_version = settings.MODEL_VERSION
         
         if weights_path is None:
-            default_path = os.path.join(os.path.dirname(__file__), "weights.npz")
+            default_path = "models/weights.npz"
             if os.path.exists(default_path):
                 weights_path = default_path
 
