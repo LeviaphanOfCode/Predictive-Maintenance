@@ -224,7 +224,6 @@ __marimo__/
 
 # Data and artefacts
 /data/processed/
-/artifacts/
 miruns/
 
 # Weights
