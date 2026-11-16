@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Dict
 from uuid import UUID
 from datetime import datetime
@@ -26,6 +26,8 @@ class TopKItem(BaseModel):
     prob: float
 
 class PredictResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     request_id: UUID
     equipment_id: str
     predicted_class: str = Field(..., description = "safe | warning | critical")

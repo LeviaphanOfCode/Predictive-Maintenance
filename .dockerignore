@@ -1,0 +1,14 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.dvc/cache/
+data/
+*.csv
+*.parquet
+.DS_Store
+.pytest_cache/
+.ipynb_checkpoints/
+mlruns/
+

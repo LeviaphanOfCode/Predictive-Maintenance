@@ -1,5 +1,5 @@
 class Settings:
-    MODEL_VERSION: str = "1.3.0"
+    MODEL_VERSION: str = "1.4.0"
     FALLBACK_THRESHOLD: float = 0.75
     
     # Параметры скейлера из train_x

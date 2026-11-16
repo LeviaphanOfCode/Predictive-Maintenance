@@ -202,20 +202,30 @@ X-API-Key: <secret_token>
 **Схема входных данных (Pydantic):**
 
 ```python
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 from datetime import datetime
-from typing import List
+from typing import Dict, List
 
 class PredictRequest(BaseModel):
     request_id: UUID = Field(description="Уникальный идентификатор запроса (UUIDv4)")
     equipment_id: str = Field(description="Идентификатор единицы оборудования")
     from_ts: datetime = Field(description="Начало окна телеметрии")
     to_ts: datetime = Field(description="Конец окна телеметрии")
-    sensors: List[str] = Field(
-        default=["vibration", "temperature", "pressure"],
-        description="Список сенсоров для запроса"
+    telemetry: Dict[str, List[float]] = Field(
+        description="Временные ряды датчиков: 4 канала по 60 точек"
     )
+
+    @field_validator("telemetry")
+    @classmethod
+    def validate_telemetry_channels(cls, v):
+        required_channels = ["temperature", "pressure", "vibration", "humidity"]
+        for channel in required_channels:
+            if channel not in v:
+                raise ValueError(f"Missing required telemetry channel: {channel}")
+            if len(v[channel]) != 60:
+                raise ValueError(f"Channel {channel} must contain exactly 60 data points")
+        return v
 
     model_config = {
         "json_schema_extra": {
@@ -224,7 +234,12 @@ class PredictRequest(BaseModel):
                 "equipment_id": "PUMP_UNIT_42",
                 "from_ts": "2026-09-28T10:00:00Z",
                 "to_ts": "2026-09-28T10:01:00Z",
-                "sensors": ["vibration", "temperature", "pressure"]
+                "telemetry": {
+                    "temperature": [75.0] * 60,
+                    "pressure": [15.0] * 60,
+                    "vibration": [3.2] * 60,
+                    "humidity": [45.0] * 60
+                }
             }
         }
     }
@@ -238,9 +253,11 @@ class TopKItem(BaseModel):
     prob: float
 
 class PredictResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     request_id: str = Field(description="UUID запроса для аудита")
     equipment_id: str = Field(description="Идентификатор оборудования")
-    predicted_class: str = Field(description="normal | warning | failure")
+    predicted_class: str = Field(description="safe | warning | critical")
     confidence: float = Field(ge=0.0, le=1.0, description="max(softmax)")
     top_k: List[TopKItem] = Field(description="Топ-3 класса с вероятностями")
     fallback_triggered: bool = Field(description="true, если confidence < 0.75")
@@ -253,15 +270,15 @@ class PredictResponse(BaseModel):
 {
   "request_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "equipment_id": "PUMP_UNIT_42",
-  "predicted_class": "failure",
+  "predicted_class": "critical",
   "confidence": 0.68,
   "top_k": [
-    {"cls": "failure", "prob": 0.68},
-    {"cls": "warning", "prob": 0.24},
-    {"cls": "normal",  "prob": 0.08}
+    {"cls": "critical", "prob": 0.68},
+    {"cls": "warning",  "prob": 0.24},
+    {"cls": "safe",     "prob": 0.08}
   ],
   "fallback_triggered": true,
-  "model_version": "1.3.0"
+  "model_version": "1.4.0"
 }
 ```
 
@@ -285,10 +302,8 @@ class PredictResponse(BaseModel):
 
 ```json
 {
-  "status": "healthy",
-  "model_loaded": true,
-  "model_version": "1.3.0",
-  "uptime_seconds": 3600
+  "status": "ok",
+  "model_version": "1.4.0"
 }
 ```
 
@@ -404,6 +419,9 @@ fallback_rate 0.12
 ```
 ai-system-predictive-maintenance/
 ├── .gitignore              # Исключения Git (кэш, venv, веса моделей)
+├── .dockerignore           # Исключения контекста сборки Docker
+├── Dockerfile              # Многослойная сборка образа
+├── requirements.txt        # Необходимые зависимости для импорта библиотек
 ├── LICENSE                 # MIT License
 ├── README.md               # Архитектурный отчет (разделы 1–10)
 ├── app/
@@ -411,9 +429,15 @@ ai-system-predictive-maintenance/
 │   │   ├── schemas.py
 │   │   └── routes.py
 │   ├── core/               # Конфигурация и логирование
+│   │   ├── config.py
+│   │   ├── contracts.py
 │   ├── data/               # Загрузка и валидация телеметрии
 │   ├── ml/                 # ModelLoader, preprocessing, inference
+│   │   ├── inference.py
+│   │   ├── pipeline.py
+│   │   ├── preprocessing.py
 │   ├── services/           # Бизнес-логика (порог, fallback, правила)
+│   │   ├── prediction.py
 │   ├── repositories/       # Слой персистентности (SQLite)
 │   └── main.py             # Точка входа FastAPI
 ├── docs/
@@ -423,5 +447,7 @@ ai-system-predictive-maintenance/
 │       ├── ADR-02-model-registry.md
 │       └── ADR-03-monolith-vs-microservices.md
 ├── models/                 # Артефакты модели (в .gitignore)
+│   │   ├── weights.npz
 └── tests/
+│   │   ├── test_container.py                 #smoke-тесты контейнера
 ```
